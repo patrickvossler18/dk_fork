@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 from DeepKnockoffs.mmd import mix_rbf_mmd2_loss
 np.warnings.filterwarnings('ignore')
 
@@ -78,7 +79,7 @@ def gen_batches(n_samples, batch_size, n_reps):
 class Net(nn.Module):
     """ Deep knockoff network
     """
-    def __init__(self, p, dim_h, family="continuous"):
+    def __init__(self, p, dim_h, cat_var_idx, family="continuous"):
         """ Constructor
         :param p: dimensions of data
         :param dim_h: width of the network (~6 layers are fixed)
@@ -88,6 +89,8 @@ class Net(nn.Module):
 
         self.p = p
         self.dim_h = dim_h
+        self.cat_var_idx = cat_var_idx
+        self.sig = nn.Sigmoid()
         if (family=="continuous"):
             self.main = nn.Sequential(
                 nn.Linear(2*self.p, self.dim_h, bias=False),
@@ -132,21 +135,25 @@ class Net(nn.Module):
                 nn.PReLU(),
                 nn.Linear(self.dim_h, self.p),
                 nn.Sigmoid(),
-                nn.BatchNorm1d(self.p, eps=1e-02),
+                nn.BatchNorm1d(self.p, eps=1e-02)
             )
         else:
             sys.exit("Error: unknown family");
 
-    def forward(self, x, noise):
+    def forward(self, x, noise, cat_var_idx):
         """ Sample knockoff copies of the data
         :param x: input data
         :param noise: random noise seed
+        :param cat_var_idx: list of the categorical variables
         :returns the constructed knockoffs
         """
+        # We want to take the output of the network and apply the sigmoid to the cat vars
         x_cat = torch.cat((x,noise),1)
         x_cat[:,0::2] = x
         x_cat[:,1::2] = noise
-        return self.main(x_cat)
+        res = self.main(x_cat)
+        res[:,cat_var_idx] = self.sig(res[:,cat_var_idx])
+        return res
 
 def norm(X, p=2):
     if(p==np.inf):
@@ -181,6 +188,7 @@ class KnockoffMachine:
         self.p = pars['p']
         self.dim_h = pars['dim_h']
         self.family = pars['family']
+        self.cat_var_idx = pars['cat_var_idx']
 
         # optimization parameters
         self.epochs = pars['epochs']
@@ -224,7 +232,7 @@ class KnockoffMachine:
         self.resume_epoch = 0
 
         # init the network
-        self.net = Net(self.p, self.dim_h, family=self.family)
+        self.net = Net(self.p, self.dim_h, self.cat_var_idx, family=self.family)
 
     def compute_diagnostics(self, X, Xk, noise, test=False):
         """ Evaluates the different components of the loss function
@@ -437,7 +445,8 @@ class KnockoffMachine:
                 self.net_optim.zero_grad()
 
                 # Run the network
-                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
+                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx)
+                # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
                 loss, loss_display, mmd_full, mmd_swap = self.loss(X_batch, Xk_batch)
@@ -605,7 +614,7 @@ class KnockoffMachine:
         self.net.eval()
 
         # Run the network in evaluation mode
-        Xk = self.net(X, self.noise_std*torch.randn(X.size(0),self.dim_noise))
+        Xk = self.net(X, self.noise_std*torch.randn(X.size(0),self.dim_noise),self.cat_var_idx)
         Xk = Xk.data.cpu().numpy()
 
         return Xk
