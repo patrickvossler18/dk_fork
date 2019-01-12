@@ -91,6 +91,7 @@ class Net(nn.Module):
         self.dim_h = dim_h
         self.cat_var_idx = cat_var_idx
         self.sig = nn.Sigmoid()
+        self.soft = nn.Softmax()
         if (family=="continuous"):
             self.main = nn.Sequential(
                 nn.Linear(2*self.p, self.dim_h, bias=False),
@@ -147,12 +148,15 @@ class Net(nn.Module):
         :param cat_var_idx: list of the categorical variables
         :returns the constructed knockoffs
         """
-        # We want to take the output of the network and apply the sigmoid to the cat vars
+        
         x_cat = torch.cat((x,noise),1)
         x_cat[:,0::2] = x
         x_cat[:,1::2] = noise
         res = self.main(x_cat)
-        res[:,cat_var_idx] = self.sig(res[:,cat_var_idx])
+        # We want to take the output of the network and apply a softmax to each group of four
+        list_groups = zip(*(iter(cat_var_idx),) * 4)
+        for group in list_groups:
+            res[:,group] = self.soft(res[:,group])
         return res
 
 def norm(X, p=2):
