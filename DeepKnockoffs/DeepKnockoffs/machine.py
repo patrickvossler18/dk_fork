@@ -76,6 +76,13 @@ def gen_batches(n_samples, batch_size, n_reps):
             batches += [new_batch]
     return(batches)
 
+def chunks(l, n):
+    # For item i in a range that is a length of l,
+    for i in range(0, len(l), n):
+        # Create an index range for l of n items:
+        yield l[i:i+n]
+
+
 class Net(nn.Module):
     """ Deep knockoff network
     """
@@ -154,7 +161,7 @@ class Net(nn.Module):
         x_cat[:,1::2] = noise
         res = self.main(x_cat)
         # We want to take the output of the network and apply a softmax to each group of four
-        list_groups = zip(*(iter(cat_var_idx),) * 4)
+        list_groups = chunks(cat_var_idx,4)
         for group in list_groups:
             res[:,group] = self.soft(res[:,group])
         return res
