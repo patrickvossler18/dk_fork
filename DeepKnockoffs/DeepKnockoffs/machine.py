@@ -164,7 +164,6 @@ class Net(nn.Module):
         list_groups = chunks(cat_var_idx,4)
         for group in list_groups:
             res[:,group] = self.soft(res[:,group])
-            print(res[:,group])
         return res
 
 def norm(X, p=2):
