@@ -209,6 +209,7 @@ class KnockoffMachine:
         self.family = pars['family']
         self.cat_var_idx = pars['cat_var_idx']
         self.num_cuts = pars['num_cuts']
+        self.use_weighting = pars['use_weighting']
         self.kappa = pars['kappa']
 
         # optimization parameters
@@ -382,21 +383,24 @@ class KnockoffMachine:
             mXs = mX / (eps+torch.sqrt(scaleX))
             mXks = mXk / (eps+torch.sqrt(scaleXk))
 
-            # Split the categorical and continuous variables
-            mXs_dis = mXs[:, self.cat_var_idx]
-            mXks_dis = mXks[:, self.cat_var_idx]
+            if self.use_weighting:
+                # Split the categorical and continuous variables
+                mXs_dis = mXs[:, self.cat_var_idx]
+                mXks_dis = mXks[:, self.cat_var_idx]
 
-            mXs_cont = np.delete(mXs, self.cat_var_idx, 1)
-            mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
+                mXs_cont = np.delete(mXs, self.cat_var_idx, 1)
+                mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
 
-            # Generate our weighting variable t
-            p_1 = len(self.cat_var_idx)
-            t_weight = np.max(1, self.kappa*((p - p_1)/p_1))
+                # Generate our weighting variable t
+                p_1 = len(self.cat_var_idx)
+                t_weight = np.max(1, self.kappa*((p - p_1)/p_1))
 
-            # Correlation between X and Xk
-            corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
-            corr_XXk_cont = (mXs_cont*mXks_cont).mean(0)
-            corr_XXk = corr_XXk_dis + corr_XXk_cont
+                # Correlation between X and Xk
+                corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
+                corr_XXk_cont = (mXs_cont*mXks_cont).mean(0)
+                corr_XXk = corr_XXk_dis + corr_XXk_cont
+            else:
+                corr_XXk = (mXs * mXks).mean(0)
             loss_corr = (corr_XXk-self.target_corr).pow(2).mean()
 
         # Combine the loss functions
