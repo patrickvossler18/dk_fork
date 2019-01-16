@@ -209,6 +209,7 @@ class KnockoffMachine:
         self.family = pars['family']
         self.cat_var_idx = pars['cat_var_idx']
         self.num_cuts = pars['num_cuts']
+        self.kappa = pars['kappa']
 
         # optimization parameters
         self.epochs = pars['epochs']
@@ -390,7 +391,7 @@ class KnockoffMachine:
 
             # Generate our weighting variable t
             p_1 = len(self.cat_var_idx)
-            t_weight = np.max(1, (p - p_1)/p_1)
+            t_weight = np.max(1, self.kappa*((p - p_1)/p_1))
 
             # Correlation between X and Xk
             corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
