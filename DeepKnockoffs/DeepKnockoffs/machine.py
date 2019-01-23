@@ -404,7 +404,8 @@ class KnockoffMachine:
                 # Correlation between X and Xk
                 corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
                 corr_XXk_cont = (mXs_cont*mXks_cont).mean(0)
-                corr_XXk = corr_XXk_dis + corr_XXk_cont
+                corr_XXk = torch.cat((corr_XXk_dis, corr_XXk_cont), 0)
+                print(corr_XXk.size())
             else:
                 corr_XXk = (mXs * mXks).mean(0)
             loss_corr = (corr_XXk-self.target_corr).pow(2).mean()
