@@ -386,18 +386,17 @@ class KnockoffMachine:
             if self.use_weighting:
                 # Split the categorical and continuous variables
                 mXs_dis = mXs[:, self.cat_var_idx]
-                print("did we get here")
                 mXks_dis = mXks[:, self.cat_var_idx]
 
                 # mXs_cont = np.delete(mXs, self.cat_var_idx, 1)
                 # cont_idx = np.arange((np.max(self.cat_var_idx)+1),mXs.size()[0])
-                mXs_cont = mXs[:, (np.max(self.cat_var_idx)+1),mXs.size()[0]]
+                mXs_cont = mXs[:, (np.max(self.cat_var_idx)+1),mXs.size()[1]]
                 print((np.max(self.cat_var_idx)+1))
                 print(mXs.size[0])
                 # mXs_cont = mXs[:,[z for z in range(mXs.size[1]) if not z in self.cat_var_idx]]
                 print(mXs_cont.shape)
                 # mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
-                mXks_cont = mXks[:, (np.max(self.cat_var_idx)+1):mXks.size[0]]
+                mXks_cont = mXks[:, (np.max(self.cat_var_idx)+1):mXks.size()[1]]
 
                 # Generate our weighting variable t
                 p_1 = len(self.cat_var_idx)
