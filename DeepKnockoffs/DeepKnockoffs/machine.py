@@ -388,8 +388,11 @@ class KnockoffMachine:
                 mXs_dis = mXs[:, self.cat_var_idx]
                 mXks_dis = mXks[:, self.cat_var_idx]
 
-                mXs_cont = np.delete(mXs, self.cat_var_idx, 1)
-                mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
+                # mXs_cont = np.delete(mXs, self.cat_var_idx, 1)
+                mXs_cont = mXs[:,[z for z in range(mXs.size[1]) if not z in self.cat_var_idx]]
+                print(mXs_cont.shape)
+                # mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
+                mXks_cont = mXks[:,[z for z in range(mXks.size[1]) if not z in self.cat_var_idx]]
 
                 # Generate our weighting variable t
                 p_1 = len(self.cat_var_idx)
@@ -406,8 +409,8 @@ class KnockoffMachine:
         # Combine the loss functions
         loss = self.GAMMA*mmd_full + self.GAMMA*mmd_swap + self.LAMBDA*loss_moments + self.DELTA*loss_corr
         loss_display = loss
-        debug_info = [mXs_dis.shape,type(mXs_cont),mXs_cont.shape,corr_XXk_dis,corr_XXk_cont]
-        return loss, loss_display, mmd_full, mmd_swap, debug_info
+        # debug_info = [mXs_dis.shape,type(mXs_cont),mXs_cont.shape,corr_XXk_dis,corr_XXk_cont]
+        return loss, loss_display, mmd_full, mmd_swap
 
     def train(self, X_in, resume=False):
         """ Fit the machine to the training data
@@ -489,7 +492,7 @@ class KnockoffMachine:
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
-                loss, loss_display, mmd_full, mmd_swap, debug_info = self.loss(X_batch, Xk_batch)
+                loss, loss_display, mmd_full, mmd_swap = self.loss(X_batch, Xk_batch)
 
                 # Compute the gradient
                 loss.backward()
@@ -573,7 +576,6 @@ class KnockoffMachine:
                       (diagnostics_train["Corr-Full"] + diagnostics_train["Corr-Swap"]), end=", ")
                 print("Decorr: %.3f" %
                       (diagnostics_train["Corr-Diag"]), end="")
-                print(debug_info)
                 
             print("")
             sys.stdout.flush()
