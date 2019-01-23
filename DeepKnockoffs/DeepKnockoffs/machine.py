@@ -386,6 +386,7 @@ class KnockoffMachine:
             if self.use_weighting:
                 # Split the categorical and continuous variables
                 mXs_dis = mXs[:, self.cat_var_idx]
+                print("did we get here")
                 mXks_dis = mXks[:, self.cat_var_idx]
 
                 # mXs_cont = np.delete(mXs, self.cat_var_idx, 1)
