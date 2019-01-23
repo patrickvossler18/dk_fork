@@ -399,7 +399,7 @@ class KnockoffMachine:
                 p_dis = len(self.cat_var_idx)
                 p_cont = self.p - (self.ncat * self.num_cuts)
 
-                t_weight = np.max(1.0, int(self.kappa*(p_cont/p_dis)))
+                t_weight = np.max([1, int(self.kappa*(p_cont/p_dis))])
 
                 # Correlation between X and Xk
                 corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
