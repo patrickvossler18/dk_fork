@@ -385,6 +385,7 @@ class KnockoffMachine:
             mXks = mXk / (eps+torch.sqrt(scaleXk))
 
             if self.use_weighting:
+                print("using weighting")
                 # Split the categorical and continuous variables
                 mXs_dis = mXs[:, self.cat_var_idx]
                 mXks_dis = mXks[:, self.cat_var_idx]
