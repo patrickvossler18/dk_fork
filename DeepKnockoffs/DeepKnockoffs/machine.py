@@ -392,7 +392,7 @@ class KnockoffMachine:
                 # cont_idx = np.arange((np.max(self.cat_var_idx)+1),mXs.size()[0])
                 mXs_cont = mXs[:, (np.max(self.cat_var_idx)+1):mXs.size()[1]]
                 print((np.max(self.cat_var_idx)+1))
-                print(mXs.size[1])
+                print(mXs.size()[1])
                 # mXs_cont = mXs[:,[z for z in range(mXs.size[1]) if not z in self.cat_var_idx]]
                 print(mXs_cont.shape)
                 # mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
