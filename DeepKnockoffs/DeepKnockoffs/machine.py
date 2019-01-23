@@ -393,14 +393,12 @@ class KnockoffMachine:
                 mXs_cont = mXs[:, (np.max(self.cat_var_idx)+1):mXs.size()[1]]
                 print((np.max(self.cat_var_idx)+1))
                 print(mXs.size()[1])
-                # mXs_cont = mXs[:,[z for z in range(mXs.size[1]) if not z in self.cat_var_idx]]
-                print(mXs_cont.shape)
                 # mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
                 mXks_cont = mXks[:, (np.max(self.cat_var_idx)+1):mXks.size()[1]]
 
                 # Generate our weighting variable t
                 p_1 = len(self.cat_var_idx)
-                t_weight = np.max(1, self.kappa*((p - p_1)/p_1))
+                t_weight = np.max(1, self.kappa*((self.p - p_1)/p_1))
 
                 # Correlation between X and Xk
                 corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
