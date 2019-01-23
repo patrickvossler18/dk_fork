@@ -208,6 +208,7 @@ class KnockoffMachine:
         self.dim_h = pars['dim_h']
         self.family = pars['family']
         self.cat_var_idx = pars['cat_var_idx']
+        self.ncat = pars['ncat']
         self.num_cuts = pars['num_cuts']
         self.use_weighting = pars['use_weighting']
         self.kappa = pars['kappa']
@@ -391,14 +392,14 @@ class KnockoffMachine:
                 # mXs_cont = np.delete(mXs, self.cat_var_idx, 1)
                 # cont_idx = np.arange((np.max(self.cat_var_idx)+1),mXs.size()[0])
                 mXs_cont = mXs[:, (np.max(self.cat_var_idx)+1):mXs.size()[1]]
-                print((np.max(self.cat_var_idx)+1))
-                print(mXs.size()[1])
                 # mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
                 mXks_cont = mXks[:, (np.max(self.cat_var_idx)+1):mXks.size()[1]]
 
                 # Generate our weighting variable t
-                p_1 = len(self.cat_var_idx)
-                t_weight = np.max(1, self.kappa*((self.p - p_1)/p_1))
+                p_dis = len(self.cat_var_idx)
+                p_cont = self.p - (self.ncat * self.num_cuts)
+
+                t_weight = np.max(1.0, int(self.kappa*(p_cont/p_dis)))
 
                 # Correlation between X and Xk
                 corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
