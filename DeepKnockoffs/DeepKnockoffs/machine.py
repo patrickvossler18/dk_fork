@@ -396,7 +396,8 @@ class KnockoffMachine:
                 t_weight = np.max(1, self.kappa*((p - p_1)/p_1))
 
                 # Correlation between X and Xk
-                corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
+                # If this doesn't work try just weighting the mean value?
+                corr_XXk_dis = t_weight*(mXs_dis*mXks_dis).mean(0)
                 corr_XXk_cont = (mXs_cont*mXks_cont).mean(0)
                 corr_XXk = corr_XXk_dis + corr_XXk_cont
             else:
