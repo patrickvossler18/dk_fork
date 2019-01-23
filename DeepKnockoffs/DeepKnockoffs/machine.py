@@ -254,7 +254,7 @@ class KnockoffMachine:
         self.resume_epoch = 0
 
         # init the network
-        self.net = Net(self.p, self.dim_h, self.cat_var_idx, family=self.family)
+        self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.num_cuts, family=self.family)
 
     def compute_diagnostics(self, X, Xk, noise, test=False):
         """ Evaluates the different components of the loss function
