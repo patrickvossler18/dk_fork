@@ -485,7 +485,7 @@ class KnockoffMachine:
                 self.net_optim.zero_grad()
 
                 # Run the network
-                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx)
+                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.num_cuts,)
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
