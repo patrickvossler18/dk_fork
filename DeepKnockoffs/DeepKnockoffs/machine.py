@@ -655,7 +655,7 @@ class KnockoffMachine:
         self.net.eval()
 
         # Run the network in evaluation mode
-        Xk = self.net(X, self.noise_std*torch.randn(X.size(0),self.dim_noise),self.cat_var_idx)
+        Xk = self.net(X, self.noise_std*torch.randn(X.size(0),self.dim_noise),self.cat_var_idx,self.num_cuts)
         Xk = Xk.data.cpu().numpy()
 
         return Xk
