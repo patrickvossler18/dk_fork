@@ -91,7 +91,7 @@ def chunks(l, n):
 class Net(nn.Module):
     """ Deep knockoff network
     """
-    def __init__(self, p, dim_h, cat_var_idx, num_cuts, network_type, family="continuous"):
+    def __init__(self, p, dim_h, cat_var_idx, num_cuts, family="continuous"):
         """ Constructor
         :param p: dimensions of data
         :param dim_h: width of the network (~6 layers are fixed)
@@ -107,54 +107,52 @@ class Net(nn.Module):
         self.sig = nn.Sigmoid()
         self.soft = nn.Softmax()
         if (family == "continuous"):
-            if network_type == "discrete":
-                self.p = len(cat_var_idx)
-                self.dim_h = int(10*self.p)
-                self.main_dis = nn.Sequential(
-                    nn.Linear(2*self.p, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h_cont, self.p),
-                )
-            elif network_type == "continuous":
-                self.p = len(self.cont_var_idx)
-                self.dim_h = int(10*self.p)
-                self.main_cont = nn.Sequential(
-                    nn.Linear(2*self.p, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h, self.dim_h, bias=False),
-                    nn.BatchNorm1d(self.dim_h),
-                    nn.PReLU(),
-                    nn.Linear(self.dim_h_cont, self.p),
-                )
+            self.p = len(cat_var_idx)
+            self.dim_h = int(10*self.p)
+            self.main_dis = nn.Sequential(
+                nn.Linear(2*self.p, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h_cont, self.p),
+            )
+            self.p = len(self.cont_var_idx)
+            self.dim_h = int(10*self.p)
+            self.main_cont = nn.Sequential(
+                nn.Linear(2*self.p, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h, self.dim_h, bias=False),
+                nn.BatchNorm1d(self.dim_h),
+                nn.PReLU(),
+                nn.Linear(self.dim_h_cont, self.p),
+            )
         elif (family == "binary"):
             self.main = nn.Sequential(
                 nn.Linear(2*self.p, self.dim_h, bias=False),
