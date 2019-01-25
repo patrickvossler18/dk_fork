@@ -239,6 +239,7 @@ class KnockoffMachine:
         self.p = pars['p']
         self.dim_h = pars['dim_h']
         self.family = pars['family']
+        self.ncat = pars['ncat']
         self.cat_var_idx = pars['cat_var_idx']
         self.cont_var_idx = np.arange((np.max(self.cat_var_idx)+1), self.p)
         self.ncat = pars['ncat']
@@ -536,8 +537,9 @@ class KnockoffMachine:
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
-                loss_dis, loss_display_dis, mmd_full_dis, mmd_swap_dis = self.loss(X_batch[:, self.cat_var_idx], Xk_dis_batch)
-                loss_cont, loss_display_cont, mmd_full_cont, mmd_swap_cont = self.loss(X_batch[:, (np.max(self.cat_var_idx)+1):X_batch.size()[1]], Xk_cont_batch)
+                cat_var_idx_compact = np.arange(0, self.ncat)
+                loss_dis, loss_display_dis, mmd_full_dis, mmd_swap_dis = self.loss(X_batch[:, cat_var_idx_compact ], Xk_dis_batch)
+                loss_cont, loss_display_cont, mmd_full_cont, mmd_swap_cont = self.loss(X_batch[:, (np.max(self.cat_var_idx_compact)+1):Xk_cont_batch.size()[1]], Xk_cont_batch)
 
                 # Compute the gradient
                 loss_dis.backward()
