@@ -91,7 +91,7 @@ def chunks(l, n):
 class Net(nn.Module):
     """ Deep knockoff network
     """
-    def __init__(self, p, dim_h, cat_var_idx, num_cuts, family="continuous"):
+    def __init__(self, p, dim_h, cat_var_idx, num_cuts, network_type, family="continuous"):
         """ Constructor
         :param p: dimensions of data
         :param dim_h: width of the network (~6 layers are fixed)
@@ -102,10 +102,17 @@ class Net(nn.Module):
         self.p = p
         self.dim_h = dim_h
         self.cat_var_idx = cat_var_idx
+        self.cont_var_idx = np.arange((np.max(self.cat_var_idx)+1), p)
         self.num_cuts = num_cuts
         self.sig = nn.Sigmoid()
         self.soft = nn.Softmax()
         if (family == "continuous"):
+            if network_type == "discrete":
+                self.p = len(cat_var_idx)
+                self.dim_h = int(10*self.p)
+            elif network_type == "continuous":
+                self.p = len(self.cont_var_idx)
+                self.dim_h = int(10*self.p)
             self.main = nn.Sequential(
                 nn.Linear(2*self.p, self.dim_h, bias=False),
                 nn.BatchNorm1d(self.dim_h),
@@ -125,7 +132,7 @@ class Net(nn.Module):
                 nn.Linear(self.dim_h, self.dim_h, bias=False),
                 nn.BatchNorm1d(self.dim_h),
                 nn.PReLU(),
-                nn.Linear(self.dim_h, self.p),
+                nn.Linear(self.dim_h_cont, self.p),
             )
         elif (family == "binary"):
             self.main = nn.Sequential(
@@ -502,8 +509,8 @@ class KnockoffMachine:
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
-                loss_dis, loss_display_dis, mmd_full_dis, mmd_swap_dis = self.loss(X_batch[:,self.cat_var_idx], Xk_dis_batch)
-                loss_cont, loss_display_cont, mmd_full_cont, mmd_swap_cont = self.loss(X_batch[:,(np.max(self.cat_var_idx)+1):mXs.size()[1]], Xk_cont_batch)
+                loss_dis, loss_display_dis, mmd_full_dis, mmd_swap_dis = self.loss(X_batch[:, self.cat_var_idx], Xk_dis_batch)
+                loss_cont, loss_display_cont, mmd_full_cont, mmd_swap_cont = self.loss(X_batch[:, (np.max(self.cat_var_idx)+1):X_batch.size()[1]], Xk_cont_batch)
 
                 # Compute the gradient
                 loss_dis.backward()
