@@ -165,12 +165,15 @@ class Net(nn.Module):
         x_cat = torch.cat((x, noise), 1)
         x_cat[:, 0::2] = x
         x_cat[:, 1::2] = noise
-        res = self.main(x_cat)
+        print((np.max(self.cat_var_idx)+1))
+        print(x_cat.size()[1])
+        res_cont = self.main(x_cat[:, (np.max(self.cat_var_idx)+1):x_cat.size()[1]])
+        res_dis = self.main(x_cat[:, cat_var_idx])
         # We want to take the output of the network and apply a softmax to each group of four
         list_groups = chunks(cat_var_idx, num_cuts)
         for group in list_groups:
-            res[:, group] = self.soft(res[:, group])
-        return res
+            res_dis[:, group] = self.soft(res_dis[:, group])
+        return res_dis, res_cont
 
 
 def norm(X, p=2):
@@ -480,9 +483,13 @@ class KnockoffMachine:
             # divide the data into batches
             batches = gen_batches(X.size(0), self.batch_size, self.epoch_length)
 
-            losses = []
-            losses_dist_swap = []
-            losses_dist_full = []
+            losses_dis = []
+            losses_dist_swap_dis = []
+            losses_dist_full_dis = []
+
+            losses_cont = []
+            losses_dist_swap_cont = []
+            losses_dist_full_cont = []
 
             for batch in batches:
                 # Extract data for this batch
@@ -491,26 +498,33 @@ class KnockoffMachine:
                 self.net_optim.zero_grad()
 
                 # Run the network
-                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.num_cuts,)
+                Xk_dis_batch, Xk_cont_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.num_cuts)
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
-                loss, loss_display, mmd_full, mmd_swap = self.loss(X_batch, Xk_batch)
+                loss_dis, loss_display_dis, mmd_full_dis, mmd_swap_dis = self.loss(X_batch[:,self.cat_var_idx], Xk_dis_batch)
+                loss_cont, loss_display_cont, mmd_full_cont, mmd_swap_cont = self.loss(X_batch[:,(np.max(self.cat_var_idx)+1):mXs.size()[1]], Xk_cont_batch)
 
                 # Compute the gradient
-                loss.backward()
+                loss_dis.backward()
+                loss_cont.backward()
 
                 # Take a gradient step
                 self.net_optim.step()
 
                 # Save history
-                losses.append(loss_display.data.cpu().item())
+                losses_dis.append(loss_display_dis.data.cpu().item())
+                losses_cont.append(loss_display_cont.data.cpu().item())
+                # losses.append(loss_display.data.cpu().item())
                 if self.GAMMA > 0:
-                    losses_dist_swap.append(mmd_swap.data.cpu().item())
-                    losses_dist_full.append(mmd_full.data.cpu().item())
+                    losses_dist_swap_dis.append(mmd_swap_dis.data.cpu().item())
+                    losses_dist_full_dis.append(mmd_full_dis.data.cpu().item())
+                    losses_dist_swap_cont.append(mmd_swap_cont.data.cpu().item())
+                    losses_dist_full_cont.append(mmd_full_cont.data.cpu().item())
 
                 # Save the knockoffs
-                Xk[batch, :] = Xk_batch.data
+                # Xk[batch, :] = Xk_batch.data
+                Xk[batch, :] = torch.cat((Xk_dis_batch.data, Xk_cont_batch.data), 1)
 
             ##############################
             # Compute diagnostics
