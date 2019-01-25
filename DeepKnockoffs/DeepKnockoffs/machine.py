@@ -359,7 +359,7 @@ class KnockoffMachine:
         # Return dictionary of diagnostics
         return diagnostics
 
-    def loss(self, X, Xk, test=False):
+    def loss(self, X, Xk, p, test=False):
         """ Evaluates the loss function
         :param X: input data
         :param Xk: knockoffs of X
@@ -537,9 +537,11 @@ class KnockoffMachine:
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
-                cat_var_idx_compact = np.arange(0, self.ncat)
-                loss_dis, loss_display_dis, mmd_full_dis, mmd_swap_dis = self.loss(X_batch[:, cat_var_idx_compact ], Xk_dis_batch)
-                loss_cont, loss_display_cont, mmd_full_cont, mmd_swap_cont = self.loss(X_batch[:, (np.max(self.cat_var_idx_compact)+1):Xk_cont_batch.size()[1]], Xk_cont_batch)
+                # cat_var_idx_compact = np.arange(0, self.ncat)
+                p_dis = len(cat_var_idx)
+                p_cont = len(np.arange((np.max(self.cat_var_idx)+1), Xk_cont_batch.size()[1]))
+                loss_dis, loss_display_dis, mmd_full_dis, mmd_swap_dis = self.loss(X_batch[:, cat_var_idx], Xk_dis_batch, p_dis)
+                loss_cont, loss_display_cont, mmd_full_cont, mmd_swap_cont = self.loss(X_batch[:, (np.max(self.cat_var_idx)+1):Xk_cont_batch.size()[1]], Xk_cont_batch, p_cont)
 
                 # Compute the gradient
                 loss_dis.backward()
