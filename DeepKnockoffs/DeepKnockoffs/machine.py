@@ -151,7 +151,7 @@ class Net(nn.Module):
                 nn.Linear(self.dim_h, self.dim_h, bias=False),
                 nn.BatchNorm1d(self.dim_h),
                 nn.PReLU(),
-                nn.Linear(self.dim_h_cont, self.p),
+                nn.Linear(self.dim_h, self.p),
             )
         elif (family == "binary"):
             self.main = nn.Sequential(
