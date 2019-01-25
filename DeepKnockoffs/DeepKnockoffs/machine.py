@@ -128,7 +128,7 @@ class Net(nn.Module):
                 nn.Linear(self.dim_h, self.dim_h, bias=False),
                 nn.BatchNorm1d(self.dim_h),
                 nn.PReLU(),
-                nn.Linear(self.dim_h_cont, self.p),
+                nn.Linear(self.dim_h, self.p),
             )
             self.p = len(self.cont_var_idx)
             self.dim_h = int(10*self.p)
