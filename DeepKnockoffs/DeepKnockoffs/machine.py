@@ -102,7 +102,7 @@ class Net(nn.Module):
         self.p = p
         self.dim_h = dim_h
         self.cat_var_idx = cat_var_idx
-        self.cont_var_idx = np.arange((np.max(self.cat_var_idx)+1), p)
+        self.cont_var_idx = np.arange((np.max(self.cat_var_idx)+1), self.p)
         self.num_cuts = num_cuts
         self.sig = nn.Sigmoid()
         self.soft = nn.Softmax()
@@ -110,30 +110,51 @@ class Net(nn.Module):
             if network_type == "discrete":
                 self.p = len(cat_var_idx)
                 self.dim_h = int(10*self.p)
+                self.main_dis = nn.Sequential(
+                    nn.Linear(2*self.p, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h_cont, self.p),
+                )
             elif network_type == "continuous":
                 self.p = len(self.cont_var_idx)
                 self.dim_h = int(10*self.p)
-            self.main = nn.Sequential(
-                nn.Linear(2*self.p, self.dim_h, bias=False),
-                nn.BatchNorm1d(self.dim_h),
-                nn.PReLU(),
-                nn.Linear(self.dim_h, self.dim_h, bias=False),
-                nn.BatchNorm1d(self.dim_h),
-                nn.PReLU(),
-                nn.Linear(self.dim_h, self.dim_h, bias=False),
-                nn.BatchNorm1d(self.dim_h),
-                nn.PReLU(),
-                nn.Linear(self.dim_h, self.dim_h, bias=False),
-                nn.BatchNorm1d(self.dim_h),
-                nn.PReLU(),
-                nn.Linear(self.dim_h, self.dim_h, bias=False),
-                nn.BatchNorm1d(self.dim_h),
-                nn.PReLU(),
-                nn.Linear(self.dim_h, self.dim_h, bias=False),
-                nn.BatchNorm1d(self.dim_h),
-                nn.PReLU(),
-                nn.Linear(self.dim_h_cont, self.p),
-            )
+                self.main_cont = nn.Sequential(
+                    nn.Linear(2*self.p, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h, self.dim_h, bias=False),
+                    nn.BatchNorm1d(self.dim_h),
+                    nn.PReLU(),
+                    nn.Linear(self.dim_h_cont, self.p),
+                )
         elif (family == "binary"):
             self.main = nn.Sequential(
                 nn.Linear(2*self.p, self.dim_h, bias=False),
@@ -161,7 +182,7 @@ class Net(nn.Module):
         else:
             sys.exit("Error: unknown family")
 
-    def forward(self, x, noise, cat_var_idx, num_cuts):
+    def forward(self, x, noise_dis, noise_cont, cat_var_idx, num_cuts):
         """ Sample knockoff copies of the data
         :param x: input data
         :param noise: random noise seed
@@ -169,13 +190,16 @@ class Net(nn.Module):
         :returns the constructed knockoffs
         """
 
-        x_cat = torch.cat((x, noise), 1)
-        x_cat[:, 0::2] = x
-        x_cat[:, 1::2] = noise
-        print((np.max(self.cat_var_idx)+1))
-        print(x_cat.size()[1])
-        res_cont = self.main(x_cat[:, (np.max(self.cat_var_idx)+1):x_cat.size()[1]])
-        res_dis = self.main(x_cat[:, cat_var_idx])
+        x_cat_dis = torch.cat((x[:, cat_var_idx], noise_dis), 1)
+        x_cat_dis[:, 0::2] = x[:, cat_var_idx]
+        x_cat_dis[:, 1::2] = noise_dis
+
+        x_cat_cont = torch.cat((x[:, cat_var_idx], noise_cont), 1)
+        x_cat_cont[:, 0::2] = x[:, cat_var_idx]
+        x_cat_cont[:, 1::2] = noise_cont
+
+        res_cont = self.main_cont(x_cat_cont)
+        res_dis = self.main_dis(x_cat_dis)
         # We want to take the output of the network and apply a softmax to each group of four
         list_groups = chunks(cat_var_idx, num_cuts)
         for group in list_groups:
@@ -218,6 +242,7 @@ class KnockoffMachine:
         self.dim_h = pars['dim_h']
         self.family = pars['family']
         self.cat_var_idx = pars['cat_var_idx']
+        self.cont_var_idx = np.arange((np.max(self.cat_var_idx)+1), self.p)
         self.ncat = pars['ncat']
         self.num_cuts = pars['num_cuts']
         self.use_weighting = pars['use_weighting']
@@ -445,6 +470,8 @@ class KnockoffMachine:
 
         # allocate a matrix for the noise realization
         noise = torch.zeros(self.batch_size, self.dim_noise)
+        noise_cont = torch.zeros(self.batch_size, len(self.cont_var_idx))
+        noise_dis = torch.zeros(self.batch_size, len(self.cat_var_idx))
         noise_test = torch.zeros(X_test.shape[0], self.dim_noise)
         use_cuda = torch.cuda.is_available()
 
@@ -470,6 +497,8 @@ class KnockoffMachine:
             X = X.cuda()
             X_test = X_test.cuda()
             noise = noise.cuda()
+            noise_dis = noise_dis.cuda()
+            noise_cont = noise_cont.cuda()
             noise_test = noise_test.cuda()
             self.target_corr = self.target_corr.cuda()
 
@@ -505,7 +534,7 @@ class KnockoffMachine:
                 self.net_optim.zero_grad()
 
                 # Run the network
-                Xk_dis_batch, Xk_cont_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.num_cuts)
+                Xk_dis_batch, Xk_cont_batch = self.net(X_batch, self.noise_std*noise_dis.normal_(), self.noise_std*noise_cont.normal_(), self.cat_var_idx, self.num_cuts)
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
