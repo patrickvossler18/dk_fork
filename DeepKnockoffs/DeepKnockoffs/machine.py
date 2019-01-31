@@ -399,11 +399,13 @@ class KnockoffMachine:
                 p_dis = len(self.cat_var_idx)
                 p_cont = self.p - (self.ncat * self.num_cuts)
 
-                t_weight = np.max([1, int(self.kappa*(p_cont/p_dis))])
+                # t_weight = np.max([1, int(self.kappa*(p_cont/p_dis))])
+                t_weight = np.min([1, int(self.kappa*(p_dis/p_cont))])
 
                 # Correlation between X and Xk
-                corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
-                corr_XXk_cont = (mXs_cont*mXks_cont).mean(0)
+                corr_XXk_dis = (mXs_dis*mXks_dis).mean(0)
+                # corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
+                corr_XXk_cont = (t_weight*mXs_cont*mXks_cont).mean(0)
                 corr_XXk = torch.cat((corr_XXk_dis, corr_XXk_cont), 0)
             else:
                 corr_XXk = (mXs * mXks).mean(0)
