@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from DeepKnockoffs.mmd import mix_rbf_mmd2_loss
-from DeepKnockoffs import GaussianKnockoffs
+from DeepKnockoffs.gaussian import GaussianKnockoffs
 np.warnings.filterwarnings('ignore')
 
 
