@@ -439,9 +439,9 @@ class KnockoffMachine:
                     # Cov(X,Xk)
                     SigIntra_est = torch.mm(torch.t(mXs),mXks)/mXk.shape[0]
 
-                    second_order = GaussianKnockoffs(Sigma.data.cpu().numpy(), mu=np.mean(X.data.numpy(),0), method="sdp")
+                    second_order = GaussianKnockoffs(Sigma.data.cpu().numpy(), mu=np.mean(X.data.cpu().numpy(),0), method="sdp")
 
-                    corr_XXk = norm(torch.diag(Sigma,0) - 1 + torch.from_numpy(second_order.Ds).float()).pow(2)
+                    corr_XXk = norm(torch.diag(Sigma.data.cpu(),0) - 1 + torch.from_numpy(second_order.Ds).float()).pow(2)
                 else:
                     corr_XXk = (mXs * mXks).mean(0)
 
