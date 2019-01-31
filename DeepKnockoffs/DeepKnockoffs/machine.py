@@ -213,7 +213,7 @@ class KnockoffMachine:
         self.num_cuts = pars['num_cuts']
         self.use_weighting = pars['use_weighting']
         self.kappa = pars['kappa']
-        self.diff_decor = pars['diff_decor']
+        self.diff_decorr = pars['diff_decorr']
 
         # optimization parameters
         self.epochs = pars['epochs']
