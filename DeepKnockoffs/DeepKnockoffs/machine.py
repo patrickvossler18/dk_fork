@@ -441,7 +441,7 @@ class KnockoffMachine:
 
                     second_order = GaussianKnockoffs(Sigma.data.numpy(), mu=np.mean(X.data.numpy(),0), method="sdp")
 
-                    corr_XXk = norm(torch.diag(Sigma,0) - 1 + second_order.Ds).pow(2)
+                    corr_XXk = norm(torch.diag(Sigma,0) - 1 + torch.from_numpy(second_order.Ds)).pow(2)
                 else:
                     corr_XXk = (mXs * mXks).mean(0)
 
