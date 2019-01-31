@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from DeepKnockoffs.mmd import mix_rbf_mmd2_loss
+from DeepKnockoffs import GaussianKnockoffs
 np.warnings.filterwarnings('ignore')
 
 
@@ -212,6 +213,7 @@ class KnockoffMachine:
         self.num_cuts = pars['num_cuts']
         self.use_weighting = pars['use_weighting']
         self.kappa = pars['kappa']
+        self.diff_decor = pars['diff_decor']
 
         # optimization parameters
         self.epochs = pars['epochs']
@@ -408,7 +410,41 @@ class KnockoffMachine:
                 corr_XXk_cont = (mXs_cont*mXks_cont).mean(0)
                 corr_XXk = torch.cat((corr_XXk_dis, corr_XXk_cont), 0)
             else:
-                corr_XXk = (mXs * mXks).mean(0)
+                
+                # loss_corr = (corr_XXk-self.target_corr).pow(2).mean()
+
+
+                # # Center X,Xk
+                # mX = X - torch.mean(X, 0, keepdim=True)
+                # mXk = Xk - torch.mean(Xk, 0, keepdim=True)
+                # # Compute covariance matrices
+                # SXkXk = torch.mm(torch.t(mXk), mXk)/mXk.shape[0]
+                # SXXk = torch.mm(torch.t(mX), mXk)/mXk.shape[0]
+
+                # Center and scale X, Xk
+                # mX = X - torch.mean(X, 0, keepdim=True)
+                # mXk = Xk - torch.mean(Xk, 0, keepdim=True)
+                # scaleX = (mX*mX).mean(0, keepdim=True)
+                # scaleXk = (mXk*mXk).mean(0, keepdim=True)
+
+                # scaleX[scaleX == 0] = 1.0   # Prevent division by 0
+                # scaleXk[scaleXk == 0] = 1.0  # Prevent division by 0
+                # mXs = mX / torch.sqrt(scaleX)
+                # mXks = mXk / torch.sqrt(scaleXk)
+                if self.diff_decor:
+                    # Cov(X,X)
+                    Sigma = torch.mm(torch.t(mXs), mXs)/mXs.shape[0]
+                    # Cov(Xk,X)
+                    Sigma_ko = torch.mm(torch.t(mXks), mXks)/mXk.shape[0]
+                    # Cov(X,Xk)
+                    SigIntra_est = torch.mm(torch.t(mXs),mXks)/mXk.shape[0]
+
+                    second_order = GaussianKnockoffs(Sigma, mu=np.mean(X,0), method="sdp")
+
+                    corr_XXk = norm(torch.diag(Sigma,0) - 1 + second_order.Ds).pow(2)
+                else:
+                    corr_XXk = (mXs * mXks).mean(0)
+
             loss_corr = (corr_XXk-self.target_corr).pow(2).mean()
 
         # Combine the loss functions
