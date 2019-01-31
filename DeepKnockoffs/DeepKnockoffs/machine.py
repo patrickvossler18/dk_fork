@@ -431,7 +431,7 @@ class KnockoffMachine:
                 # scaleXk[scaleXk == 0] = 1.0  # Prevent division by 0
                 # mXs = mX / torch.sqrt(scaleX)
                 # mXks = mXk / torch.sqrt(scaleXk)
-                if self.diff_decor:
+                if self.diff_decorr:
                     # Cov(X,X)
                     Sigma = torch.mm(torch.t(mXs), mXs)/mXs.shape[0]
                     # Cov(Xk,X)
