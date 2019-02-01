@@ -439,9 +439,13 @@ class KnockoffMachine:
                     # Cov(X,Xk)
                     SigIntra_est = torch.mm(torch.t(mXs),mXks)/mXk.shape[0]
 
-                    second_order = GaussianKnockoffs(Sigma.data.cpu().numpy(), mu=np.mean(X.data.cpu().numpy(),0), method="sdp")
-
-                    corr_XXk = norm(torch.diag(Sigma.data.cpu(),0) - 1 + torch.from_numpy(second_order.Ds).float()).pow(2)
+                    try:
+                        second_order = GaussianKnockoffs(Sigma.data.cpu().numpy(), mu=np.mean(X.data.cpu().numpy(),0), method="sdp")
+                        corr_XXk = norm(torch.diag(Sigma.data.cpu(),0) - 1 + torch.from_numpy(second_order.Ds).float()).pow(2)    
+                    except Exception as e:
+                        print("SDP not feasible, using other loss function")
+                        corr_XXk = (mXs * mXks).mean(0)    
+                    
                 else:
                     corr_XXk = (mXs * mXks).mean(0)
 
