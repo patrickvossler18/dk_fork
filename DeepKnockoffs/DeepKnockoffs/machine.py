@@ -168,9 +168,9 @@ class Net(nn.Module):
         x_cat[:, 1::2] = noise
         res = self.main(x_cat)
         # We want to take the output of the network and apply a softmax to each group of four
-        list_groups = chunks(cat_var_idx, num_cuts)
-        for group in list_groups:
-            res[:, group] = self.soft(res[:, group])
+        # list_groups = chunks(cat_var_idx, num_cuts)
+        # for group in list_groups:
+        #     res[:, group] = self.soft(res[:, group])
         return res
 
 
