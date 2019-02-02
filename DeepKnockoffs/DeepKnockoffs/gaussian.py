@@ -36,8 +36,8 @@ def solve_sdp(Sigma, tol=1e-3):
     prob.solve(solver='CVXOPT')
     
     #assert prob.status == cvx.OPTIMAL
-    print(prob.status)
-    print(s.value)
+    # print(prob.status)
+    # print(s.value)
 
     s = np.clip(np.asarray(s.value).flatten(), 0, 1)
 	
