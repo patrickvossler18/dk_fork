@@ -92,7 +92,7 @@ def chunks(l, n):
 class Net(nn.Module):
     """ Deep knockoff network
     """
-    def __init__(self, p, dim_h, cat_var_idx, num_cuts, family="continuous"):
+    def __init__(self, p, dim_h, cat_var_idx, num_cuts, mixed_data, family="continuous"):
         """ Constructor
         :param p: dimensions of data
         :param dim_h: width of the network (~6 layers are fixed)
@@ -106,6 +106,7 @@ class Net(nn.Module):
         self.num_cuts = num_cuts
         self.sig = nn.Sigmoid()
         self.soft = nn.Softmax()
+        self.mixed_data = mixed_data
         if (family == "continuous"):
             self.main = nn.Sequential(
                 nn.Linear(2*self.p, self.dim_h, bias=False),
@@ -167,11 +168,15 @@ class Net(nn.Module):
         x_cat[:, 0::2] = x
         x_cat[:, 1::2] = noise
         res = self.main(x_cat)
-        # We want to take the output of the network and apply a softmax to each group of four
-        # list_groups = chunks(cat_var_idx, num_cuts)
-        # for group in list_groups:
-        #     res[:, group] = self.soft(res[:, group])
-        return res
+        if self.mixed_data:
+            # We want to take the output of the network and apply a softmax to each group of four
+            # TO DO: change num_cuts to be the number of unique values for each column
+            list_groups = chunks(cat_var_idx, num_cuts)
+            for group in list_groups:
+                res[:, group] = self.soft(res[:, group])
+            return res
+        else:
+            return res
 
 
 def norm(X, p=2):
@@ -214,6 +219,7 @@ class KnockoffMachine:
         self.use_weighting = pars['use_weighting']
         self.kappa = pars['kappa']
         self.diff_decorr = pars['diff_decorr']
+        self.mixed_data = pars['mixed_data']
 
         # optimization parameters
         self.epochs = pars['epochs']
@@ -257,7 +263,7 @@ class KnockoffMachine:
         self.resume_epoch = 0
 
         # init the network
-        self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.num_cuts, family=self.family)
+        self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.num_cuts, self.mixed_data, family=self.family)
 
     def compute_diagnostics(self, X, Xk, noise, test=False):
         """ Evaluates the different components of the loss function
@@ -533,7 +539,7 @@ class KnockoffMachine:
                 self.net_optim.zero_grad()
 
                 # Run the network
-                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.num_cuts,)
+                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.num_cuts, self.mixed_data)
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
@@ -702,7 +708,7 @@ class KnockoffMachine:
         self.net.eval()
 
         # Run the network in evaluation mode
-        Xk = self.net(X, self.noise_std*torch.randn(X.size(0),self.dim_noise),self.cat_var_idx,self.num_cuts)
+        Xk = self.net(X, self.noise_std*torch.randn(X.size(0), self.dim_noise), self.cat_var_idx, self.num_cuts, self.mixed_data)
         Xk = Xk.data.cpu().numpy()
 
         return Xk
