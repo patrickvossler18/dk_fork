@@ -88,11 +88,20 @@ def chunks(l, n):
         # Create an index range for l of n items:
         yield l[i:i+n]
 
+def chunks_diff_size(list1,list2):
+    chunks = []
+    count = 0
+    for size in list1:
+        chunks.append([list2[i+count] for i in range(size)])
+        count += size
+    return chunks
+
+
 
 class Net(nn.Module):
     """ Deep knockoff network
     """
-    def __init__(self, p, dim_h, cat_var_idx, num_cuts, mixed_data, family="continuous"):
+    def __init__(self, p, dim_h, cat_var_idx, chunk_list, mixed_data, family="continuous"):
         """ Constructor
         :param p: dimensions of data
         :param dim_h: width of the network (~6 layers are fixed)
@@ -103,7 +112,7 @@ class Net(nn.Module):
         self.p = p
         self.dim_h = dim_h
         self.cat_var_idx = cat_var_idx
-        self.num_cuts = num_cuts
+        self.chunk_list = chunk_list
         self.sig = nn.Sigmoid()
         self.soft = nn.Softmax()
         self.mixed_data = mixed_data
@@ -156,7 +165,7 @@ class Net(nn.Module):
         else:
             sys.exit("Error: unknown family")
 
-    def forward(self, x, noise, cat_var_idx, num_cuts):
+    def forward(self, x, noise, cat_var_idx, chunk_list):
         """ Sample knockoff copies of the data
         :param x: input data
         :param noise: random noise seed
@@ -170,8 +179,7 @@ class Net(nn.Module):
         res = self.main(x_cat)
         if self.mixed_data:
             # We want to take the output of the network and apply a softmax to each group of four
-            # TO DO: change num_cuts to be the number of unique values for each column
-            list_groups = chunks(cat_var_idx, num_cuts)
+            list_groups = chunks_diff_size(chunk_list,cat_var_idx)
             for group in list_groups:
                 res[:, group] = self.soft(res[:, group])
             return res
@@ -214,8 +222,8 @@ class KnockoffMachine:
         self.dim_h = pars['dim_h']
         self.family = pars['family']
         self.cat_var_idx = pars['cat_var_idx']
-        self.ncat = pars['ncat']
-        self.num_cuts = pars['num_cuts']
+        # self.ncat = pars['ncat']
+        self.chunk_list = pars['chunk_list']
         self.use_weighting = pars['use_weighting']
         self.kappa = pars['kappa']
         self.diff_decorr = pars['diff_decorr']
@@ -263,7 +271,7 @@ class KnockoffMachine:
         self.resume_epoch = 0
 
         # init the network
-        self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.num_cuts, self.mixed_data, family=self.family)
+        self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.chunk_list, self.mixed_data, family=self.family)
 
     def compute_diagnostics(self, X, Xk, noise, test=False):
         """ Evaluates the different components of the loss function
@@ -539,7 +547,7 @@ class KnockoffMachine:
                 self.net_optim.zero_grad()
 
                 # Run the network
-                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.num_cuts)
+                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list)
                 # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
@@ -708,7 +716,7 @@ class KnockoffMachine:
         self.net.eval()
 
         # Run the network in evaluation mode
-        Xk = self.net(X, self.noise_std*torch.randn(X.size(0), self.dim_noise), self.cat_var_idx, self.num_cuts)
+        Xk = self.net(X, self.noise_std*torch.randn(X.size(0), self.dim_noise), self.cat_var_idx, self.chunk_list)
         Xk = Xk.data.cpu().numpy()
 
         return Xk
