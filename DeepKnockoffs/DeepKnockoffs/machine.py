@@ -477,7 +477,7 @@ class KnockoffMachine:
         :param resume: proceed the training by loading the last checkpoint
         """
 
-        if isinstance(X_in, pd.Dataframe):
+        if isinstance(X_in, pd.DataFrame):
             X_in = X_in.values
 
         # Divide data into training/test set
@@ -713,7 +713,7 @@ class KnockoffMachine:
         :param X_in: data samples
         :return Xk: knockoff copy per each sample in X
         """
-        if isinstance(X_in, pd.Dataframe):
+        if isinstance(X_in, pd.DataFrame):
             X_in = X_in.values
 
         X = torch.from_numpy(X_in).float()
