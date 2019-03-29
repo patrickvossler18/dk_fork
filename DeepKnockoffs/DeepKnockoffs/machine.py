@@ -477,6 +477,9 @@ class KnockoffMachine:
         :param resume: proceed the training by loading the last checkpoint
         """
 
+        if isinstance(X_in, pd.Dataframe):
+            X_in = X_in.values
+
         # Divide data into training/test set
         X = torch.from_numpy(X_in[self.test_size:]).float()
         if(self.test_size > 0):
