@@ -713,6 +713,8 @@ class KnockoffMachine:
         :param X_in: data samples
         :return Xk: knockoff copy per each sample in X
         """
+        if isinstance(X_in, pd.Dataframe):
+            X_in = X_in.values
 
         X = torch.from_numpy(X_in).float()
         self.net = self.net.cpu()
