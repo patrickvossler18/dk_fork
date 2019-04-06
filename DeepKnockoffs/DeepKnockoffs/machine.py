@@ -97,7 +97,6 @@ def chunks_diff_size(list1,list2):
     return chunks
 
 
-
 class Net(nn.Module):
     """ Deep knockoff network
     """
@@ -223,7 +222,8 @@ class KnockoffMachine:
         self.family = pars['family']
         self.cat_var_idx = pars['cat_var_idx']
         # self.ncat = pars['ncat']
-        self.chunk_list = pars['chunk_list']
+        # self.chunk_list = pars['chunk_list']
+        self.chunk_list = pars.get('chunk_list',[])
         self.use_weighting = pars['use_weighting']
         self.kappa = pars['kappa']
         self.diff_decorr = pars['diff_decorr']
