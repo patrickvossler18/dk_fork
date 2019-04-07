@@ -227,7 +227,7 @@ class KnockoffMachine:
         self.use_weighting = pars['use_weighting']
         self.kappa = pars['kappa']
         self.diff_decorr = pars['diff_decorr']
-        self.mixed_data = pars['mixed_data']
+        self.mixed_data = pars.get('mixed_data',False)
 
         # optimization parameters
         self.epochs = pars['epochs']
