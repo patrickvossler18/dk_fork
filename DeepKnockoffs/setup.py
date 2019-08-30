@@ -10,7 +10,7 @@ CLASSIFIERS = ["Development Status :: 4 - Beta",
 
 DESCRIPTION = 'Generates knockoff with neural networks.'
 
-NUMPY_MIN_VERSION  = '1.14.0'
+NUMPY_MIN_VERSION  = '1.16.1'
 TORCH_MIN_VERSION  = '0.4.1'
 CVXPY_MIN_VERSION  = '1.0.24'
 SCIPY_MIN_VERSION  = '1.0.0'
