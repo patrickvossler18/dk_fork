@@ -221,7 +221,7 @@ class KnockoffMachine:
         self.p = pars['p']
         self.dim_h = pars['dim_h']
         self.family = pars['family']
-        self.cat_var_idx = pars['cat_var_idx']
+        self.cat_var_idx = pars.get('cat_var_idx', [])
         # self.ncat = pars['ncat']
         # self.chunk_list = pars['chunk_list']
         self.chunk_list = pars.get('chunk_list',[])
