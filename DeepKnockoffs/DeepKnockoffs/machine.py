@@ -469,8 +469,8 @@ class KnockoffMachine:
                     corr_XXk = (mXs * mXks).mean(0)
 
             loss_corr = (corr_XXk-self.target_corr).pow(2).mean()
-        print(self.GAMMA*mmd_full + self.GAMMA*mmd_swap + self.LAMBDA*loss_moments + self.DELTA*loss_corr)
-        print(self.GAMMA*mmd_full,self.GAMMA*mmd_swap,self.LAMBDA*loss_moments,self.DELTA*loss_corr)
+        # print(self.GAMMA*mmd_full + self.GAMMA*mmd_swap + self.LAMBDA*loss_moments + self.DELTA*loss_corr)
+        # print(self.GAMMA*mmd_full,self.GAMMA*mmd_swap,self.LAMBDA*loss_moments,self.DELTA*loss_corr)
         # Combine the loss functions
         loss = self.GAMMA*mmd_full + self.GAMMA*mmd_swap + self.LAMBDA*loss_moments + self.DELTA*loss_corr
         loss_display = loss
