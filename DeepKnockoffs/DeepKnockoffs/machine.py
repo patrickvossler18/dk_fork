@@ -221,14 +221,15 @@ class KnockoffMachine:
         self.p = pars['p']
         self.dim_h = pars['dim_h']
         self.family = pars['family']
+        self.mixed_data = pars.get('mixed_data',False)
         self.cat_var_idx = pars.get('cat_var_idx', [])
         # self.ncat = pars['ncat']
         # self.chunk_list = pars['chunk_list']
         self.chunk_list = pars.get('chunk_list',[])
-        self.use_weighting = pars['use_weighting']
-        self.kappa = pars['kappa']
-        self.diff_decorr = pars['diff_decorr']
-        self.mixed_data = pars.get('mixed_data',False)
+        self.use_weighting = pars.get('use_weighting', False)
+        self.kappa = pars.get('kappa', 0)
+        self.diff_decorr = pars.get('diff_decorr', 0)
+        
 
         # optimization parameters
         self.epochs = pars['epochs']
