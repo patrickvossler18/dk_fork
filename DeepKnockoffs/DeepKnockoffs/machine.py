@@ -726,19 +726,21 @@ class KnockoffMachine:
             X_in = X_in.values
 
         X = torch.from_numpy(X_in).float()
+        noise = self.noise_std*torch.randn(X.size(0), self.dim_noise)
         # If we can, generate using the gpu to hopefully speed up the generation step
         if use_cuda:
             self.net = self.net.cuda()
             X = X.cuda()
+            noise = noise.cuda()
         else:
             self.net = self.net.cpu()
         self.net.eval()
 
         # Run the network in evaluation mode
         if self.mixed_data:
-            Xk = self.net(X, self.noise_std*torch.randn(X.size(0), self.dim_noise), self.cat_var_idx, self.chunk_list)
+            Xk = self.net(X, noise, self.cat_var_idx, self.chunk_list)
         else:
-            Xk = self.net(X, self.noise_std*torch.randn(X.size(0), self.dim_noise))
+            Xk = self.net(X, noise)
         Xk = Xk.data.cpu().numpy()
 
         return Xk
