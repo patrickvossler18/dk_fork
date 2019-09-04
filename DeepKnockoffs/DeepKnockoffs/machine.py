@@ -100,7 +100,7 @@ def chunks_diff_size(list1,list2):
 class Net(nn.Module):
     """ Deep knockoff network
     """
-    def __init__(self, p, dim_h, cat_var_idx, chunk_list, mixed_data, family="continuous"):
+    def __init__(self, p, dim_h, cat_var_idx=[], chunk_list=[], mixed_data=False, family="continuous"):
         """ Constructor
         :param p: dimensions of data
         :param dim_h: width of the network (~6 layers are fixed)
@@ -110,8 +110,9 @@ class Net(nn.Module):
 
         self.p = p
         self.dim_h = dim_h
-        self.cat_var_idx = cat_var_idx
-        self.chunk_list = chunk_list
+        if mixed_data:
+            self.cat_var_idx = cat_var_idx
+            self.chunk_list = chunk_list
         self.sig = nn.Sigmoid()
         self.soft = nn.Softmax()
         self.mixed_data = mixed_data
@@ -271,7 +272,10 @@ class KnockoffMachine:
         self.resume_epoch = 0
 
         # init the network
-        self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.chunk_list, self.mixed_data, family=self.family)
+        if self.mixed_data:
+            self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.chunk_list, self.mixed_data, family=self.family)
+        else:
+            self.net = Net(self.p, self.dim_h, family=self.family)
 
     def compute_diagnostics(self, X, Xk, noise, test=False):
         """ Evaluates the different components of the loss function
@@ -551,8 +555,10 @@ class KnockoffMachine:
                 self.net_optim.zero_grad()
 
                 # Run the network
-                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list)
-                # Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
+                if self.mixed_data:
+                    Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list)
+                else:
+                    Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
                 # Compute the loss function
                 loss, loss_display, mmd_full, mmd_swap = self.loss(X_batch, Xk_batch)
@@ -718,11 +724,19 @@ class KnockoffMachine:
             X_in = X_in.values
 
         X = torch.from_numpy(X_in).float()
-        self.net = self.net.cpu()
+        # If we can, generate using the gpu to hopefully speed up the generation step
+        if use_cuda:
+            self.net = self.net.cuda()
+            X = X.cuda()
+        else:
+            self.net = self.net.cpu()
         self.net.eval()
 
         # Run the network in evaluation mode
-        Xk = self.net(X, self.noise_std*torch.randn(X.size(0), self.dim_noise), self.cat_var_idx, self.chunk_list)
+        if self.mixed_data:
+            Xk = self.net(X, self.noise_std*torch.randn(X.size(0), self.dim_noise), self.cat_var_idx, self.chunk_list)
+        else:
+            Xk = self.net(X, self.noise_std*torch.randn(X.size(0), self.dim_noise))
         Xk = Xk.data.cpu().numpy()
 
         return Xk
