@@ -721,6 +721,7 @@ class KnockoffMachine:
         :param X_in: data samples
         :return Xk: knockoff copy per each sample in X
         """
+        use_cuda = torch.cuda.is_available()
         if isinstance(X_in, pd.DataFrame):
             X_in = X_in.values
 
