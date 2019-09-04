@@ -165,7 +165,7 @@ class Net(nn.Module):
         else:
             sys.exit("Error: unknown family")
 
-    def forward(self, x, noise, cat_var_idx, chunk_list):
+    def forward(self, x, noise, cat_var_idx=[], chunk_list=[]):
         """ Sample knockoff copies of the data
         :param x: input data
         :param noise: random noise seed
