@@ -165,7 +165,7 @@ class Net(nn.Module):
         else:
             sys.exit("Error: unknown family")
 
-    def forward(self, x, noise, cat_var_idx=[], chunk_list=[]):
+    def forward(self, x, noise, cat_var_idx, chunk_list):
         """ Sample knockoff copies of the data
         :param x: input data
         :param noise: random noise seed
@@ -181,7 +181,7 @@ class Net(nn.Module):
             # We want to take the output of the network and apply a softmax to each group of four
             list_groups = chunks_diff_size(chunk_list,cat_var_idx)
             for group in list_groups:
-                res[:, group] = self.soft(res[:, group])
+                res[:, group] = self.soft(res[:, group].clone())
             return res
         else:
             return res
