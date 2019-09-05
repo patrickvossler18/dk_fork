@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from DeepKnockoffs.mmd import mix_rbf_mmd2_loss
 from DeepKnockoffs.gaussian import GaussianKnockoffs
 np.warnings.filterwarnings('ignore')
-
+torch.autograd.set_detect_anomaly(True)
 
 def covariance_diff_biased(X, Xk, SigmaHat, Mask, scale=1.0):
     """ Second-order loss function, as described in deep knockoffs manuscript
@@ -557,7 +557,7 @@ class KnockoffMachine:
 
                 # Run the network
                 if self.mixed_data:
-                    Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list)
+                    Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list, self.mixed_data)
                 else:
                     Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
