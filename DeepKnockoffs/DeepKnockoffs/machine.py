@@ -100,7 +100,7 @@ def chunks_diff_size(list1,list2):
 class Net(nn.Module):
     """ Deep knockoff network
     """
-    def __init__(self, p, dim_h, cat_var_idx=[], chunk_list=[], mixed_data=False, family="continuous"):
+    def __init__(self, p, dim_h, cat_var_idx, chunk_list, mixed_data, family="continuous"):
         """ Constructor
         :param p: dimensions of data
         :param dim_h: width of the network (~6 layers are fixed)
@@ -405,70 +405,7 @@ class KnockoffMachine:
             scaleXk = mXk.pow(2).mean(0, keepdim=True)
             mXs = mX / (eps+torch.sqrt(scaleX))
             mXks = mXk / (eps+torch.sqrt(scaleXk))
-
-            if self.use_weighting:
-                # Split the categorical and continuous variables
-                mXs_dis = mXs[:, self.cat_var_idx]
-                mXks_dis = mXks[:, self.cat_var_idx]
-
-                # mXs_cont = np.delete(mXs, self.cat_var_idx, 1)
-                # cont_idx = np.arange((np.max(self.cat_var_idx)+1),mXs.size()[0])
-                mXs_cont = mXs[:, (np.max(self.cat_var_idx)+1):mXs.size()[1]]
-                # mXks_cont = np.delete(mXks, self.cat_var_idx, 1)
-                mXks_cont = mXks[:, (np.max(self.cat_var_idx)+1):mXks.size()[1]]
-
-                # Generate our weighting variable t
-                p_dis = len(self.cat_var_idx)
-                p_cont = self.p - (self.ncat * self.num_cuts)
-
-                t_weight = np.max([1, int(self.kappa*(p_cont/p_dis))])
-                # t_weight = np.min([1, int(self.kappa*(p_dis/p_cont))])
-
-                # Correlation between X and Xk
-                # corr_XXk_dis = (mXs_dis*mXks_dis).mean(0)
-                corr_XXk_dis = (t_weight*mXs_dis*mXks_dis).mean(0)
-                corr_XXk_cont = (mXs_cont*mXks_cont).mean(0)
-                corr_XXk = torch.cat((corr_XXk_dis, corr_XXk_cont), 0)
-            else:
-                
-                # loss_corr = (corr_XXk-self.target_corr).pow(2).mean()
-
-
-                # # Center X,Xk
-                # mX = X - torch.mean(X, 0, keepdim=True)
-                # mXk = Xk - torch.mean(Xk, 0, keepdim=True)
-                # # Compute covariance matrices
-                # SXkXk = torch.mm(torch.t(mXk), mXk)/mXk.shape[0]
-                # SXXk = torch.mm(torch.t(mX), mXk)/mXk.shape[0]
-
-                # Center and scale X, Xk
-                # mX = X - torch.mean(X, 0, keepdim=True)
-                # mXk = Xk - torch.mean(Xk, 0, keepdim=True)
-                # scaleX = (mX*mX).mean(0, keepdim=True)
-                # scaleXk = (mXk*mXk).mean(0, keepdim=True)
-
-                # scaleX[scaleX == 0] = 1.0   # Prevent division by 0
-                # scaleXk[scaleXk == 0] = 1.0  # Prevent division by 0
-                # mXs = mX / torch.sqrt(scaleX)
-                # mXks = mXk / torch.sqrt(scaleXk)
-                if self.diff_decorr:
-                    # Cov(X,X)
-                    Sigma = torch.mm(torch.t(mXs), mXs)/mXs.shape[0]
-                    # Cov(Xk,X)
-                    Sigma_ko = torch.mm(torch.t(mXks), mXks)/mXk.shape[0]
-                    # Cov(X,Xk)
-                    SigIntra_est = torch.mm(torch.t(mXs),mXks)/mXk.shape[0]
-
-                    try:
-                        second_order = GaussianKnockoffs(Sigma.data.cpu().numpy(), mu=np.mean(X.data.cpu().numpy(),0), method="sdp")
-                        corr_XXk = norm(torch.diag(Sigma.data.cpu(),0) - 1 + torch.from_numpy(second_order.Ds).float()).pow(2)    
-                    except Exception as e:
-                        print("SDP not feasible, using other loss function")
-                        corr_XXk = (mXs * mXks).mean(0)    
-                    
-                else:
-                    corr_XXk = (mXs * mXks).mean(0)
-
+            corr_XXk = (mXs * mXks).mean(0)
             loss_corr = (corr_XXk-self.target_corr).pow(2).mean()
         # print(self.GAMMA*mmd_full + self.GAMMA*mmd_swap + self.LAMBDA*loss_moments + self.DELTA*loss_corr)
         # print(self.GAMMA*mmd_full,self.GAMMA*mmd_swap,self.LAMBDA*loss_moments,self.DELTA*loss_corr)
