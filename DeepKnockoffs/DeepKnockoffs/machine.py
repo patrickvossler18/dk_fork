@@ -181,7 +181,8 @@ class Net(nn.Module):
             # We want to take the output of the network and apply a softmax to each group of four
             list_groups = chunks_diff_size(chunk_list,cat_var_idx)
             for group in list_groups:
-                res[:, group] = self.soft(res[:, group].clone())
+                res[:, group] = self.soft([:, group])
+                res[:, group] = res[:, group].clone().detach()
             return res
         else:
             return res
