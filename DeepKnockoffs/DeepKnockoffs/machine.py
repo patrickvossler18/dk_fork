@@ -556,10 +556,11 @@ class KnockoffMachine:
                 self.net_optim.zero_grad()
 
                 # Run the network
-                if self.mixed_data:
-                    Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list)
-                else:
-                    Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
+                # if self.mixed_data:
+                #     Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list)
+                # else:
+                #     Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
+                Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list)
 
                 # Compute the loss function
                 loss, loss_display, mmd_full, mmd_swap = self.loss(X_batch, Xk_batch)
