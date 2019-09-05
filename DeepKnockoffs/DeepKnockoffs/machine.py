@@ -273,10 +273,11 @@ class KnockoffMachine:
         self.resume_epoch = 0
 
         # init the network
-        if self.mixed_data:
-            self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.chunk_list, self.mixed_data, family=self.family)
-        else:
-            self.net = Net(self.p, self.dim_h, family=self.family)
+        # if self.mixed_data:
+        #     self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.chunk_list, self.mixed_data, family=self.family)
+        # else:
+        #     self.net = Net(self.p, self.dim_h, family=self.family)
+        self.net = Net(self.p, self.dim_h, self.cat_var_idx, self.chunk_list, self.mixed_data, family=self.family)
 
     def compute_diagnostics(self, X, Xk, noise, test=False):
         """ Evaluates the different components of the loss function
@@ -738,10 +739,11 @@ class KnockoffMachine:
         self.net.eval()
 
         # Run the network in evaluation mode
-        if self.mixed_data:
-            Xk = self.net(X, noise, self.cat_var_idx, self.chunk_list)
-        else:
-            Xk = self.net(X, noise)
+        # if self.mixed_data:
+        #     Xk = self.net(X, noise, self.cat_var_idx, self.chunk_list)
+        # else:
+        #     Xk = self.net(X, noise)
+        Xk = self.net(X, noise, self.cat_var_idx, self.chunk_list)
         Xk = Xk.data.cpu().numpy()
 
         return Xk
