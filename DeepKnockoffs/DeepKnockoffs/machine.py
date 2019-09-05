@@ -557,7 +557,7 @@ class KnockoffMachine:
 
                 # Run the network
                 if self.mixed_data:
-                    Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list, self.mixed_data)
+                    Xk_batch = self.net(X_batch, self.noise_std*noise.normal_(), self.cat_var_idx, self.chunk_list)
                 else:
                     Xk_batch = self.net(X_batch, self.noise_std*noise.normal_())
 
